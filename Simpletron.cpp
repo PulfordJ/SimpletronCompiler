@@ -15,7 +15,7 @@ const char *Simpletron::FATAL_ERROR_MESSAGE =
 		"*** Simpletron execution abnormally terminated ***";
 
 Simpletron::Simpletron() :
-		//Initialise special registers.
+		//Initialize special registers.
 		instructionRegister(0), operationCode(0), operand(0), action(0), accumulator(
 				0), instructionCounter(0) {
 	for (int i = 0; i < MEMSIZE; i++) {
@@ -35,17 +35,13 @@ void Simpletron::printState() {
 
 	// List registers.
 	const int REGWIDTH = 20;
-	cout << setw(REGWIDTH) << left << "accumulator" << showpos << setw(5)
-			<< setfill('0') << internal << accumulator << endl << setfill(' ')
-			<< setw(REGWIDTH + 3) << left << "instructionCounter" << noshowpos
-			<< setw(2) << setfill('0') << instructionCounter << endl
-			<< setfill(' ') << setw(REGWIDTH) << left << "instructionRegister"
-			<< showpos << setw(5) << setfill('0') << internal
-			<< instructionRegister << endl << setfill(' ') << setw(REGWIDTH + 3)
-			<< left << "operationCode" << noshowpos << setw(2) << setfill('0')
-			<< operationCode << endl << setfill(' ') << setw(REGWIDTH + 3)
-			<< left << "operand" << setw(2) << setfill('0') << operand << endl
-			<< endl << setfill(' ') << "MEMORY:" << endl << "  ";
+	cout << setw(REGWIDTH) << left << "accumulator" << showpos << setw(5) << setfill('0') << internal << accumulator << endl
+			<< setfill(' ') << setw(REGWIDTH + 3) << left << "instructionCounter" << noshowpos << setw(2) << setfill('0') << internal << instructionCounter << endl
+			<< setfill(' ') << setw(REGWIDTH) << left << "instructionRegister" << showpos << setw(5) << setfill('0') << internal << instructionRegister << endl
+			<< setfill(' ') << setw(REGWIDTH + 3) << left << "operationCode" << noshowpos << setw(2) << setfill('0') << internal << operationCode << endl
+			<< setfill(' ') << setw(REGWIDTH + 3) << left << "operand" << setw(2) << setfill('0') << internal << operand << endl
+			<< endl
+			<< setfill(' ') << "MEMORY:" << endl << "  ";
 
 	// print column names for memory dump.
 	for (int i = 0; i < 10; i++) {

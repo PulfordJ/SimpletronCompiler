@@ -16,10 +16,6 @@ public:
 	void execute();
 	void arithResultCheck();
 
-private:
-	static const int MEMSIZE = 100;
-	static const int ENDINPUTLOOP = -99999;
-
 	//Set operation code constants.
 	static const int READ = 10;
 	static const int WRITE = 11;
@@ -37,6 +33,11 @@ private:
 	static const int BRANCHNEG = 41;
 	static const int BRANCHZERO = 42;
 	static const int HALT = 43;
+
+private:
+	static const int MEMSIZE = 100;
+	static const int ENDINPUTLOOP = -99999;
+
 	static const char *FATAL_ERROR_MESSAGE;
 
 	//Initialise special registers.
