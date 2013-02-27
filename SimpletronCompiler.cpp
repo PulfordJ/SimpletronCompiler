@@ -22,7 +22,7 @@ using namespace std;
 
 /**
  * Returns the location in SML that should be jumped to, or 0 and makes a note to check again on the second pass.
- * @param strLineNo - the line number the Simple goto command references
+ * @param strLineNo - the line number the Simple goto command references.
  * @return locationNo - the location the SML statement should point to, or 0 if not yet defineable.
  */
 int SimpletronCompiler::gotoToSML(string strLineNo) {
@@ -45,12 +45,12 @@ int SimpletronCompiler::gotoToSML(string strLineNo) {
 /**
  * Converts postFix stack of operators and addresses to SML instruction sequence.
  * @param postfixStack - postfix stack of operators and addresses.
- * @return
+ * @return address where result of expression is stored.
  */
 int SimpletronCompiler::postFixToSML(queue<string> postfixStack) {
 	stack<int> evalStack; // Holds addresses of variables to be evaluated in SML.
 
-	//Evaluate postfix expressions, numbers refer to addresses in memory.
+	// Evaluate postfix expressions, numbers refer to addresses in memory.
 	while (!postfixStack.empty()) {
 
 		string currStr = postfixStack.front();
@@ -72,7 +72,7 @@ int SimpletronCompiler::postFixToSML(queue<string> postfixStack) {
 			smlInstructs[++instructionCounter] = Simpletron::LOAD * 100
 					+ lOperand;
 
-			//Decide which type of instruction should be applied to the accumulator in the Simpletron.
+			// Decide which type of instruction should be applied to the accumulator in the Simpletron.
 			switch (op) {
 			case '+':
 				smlInstructs[++instructionCounter] = Simpletron::ADD * 100
@@ -92,57 +92,42 @@ int SimpletronCompiler::postFixToSML(queue<string> postfixStack) {
 				break;
 			}
 
-			// Temporarily store result, don't need this once evaluation completed so room for optimisation.
+			// Temporarily store result, don't need this once evaluation completed so room for optimization.
 			smlInstructs[++instructionCounter] = Simpletron::STORE * 100
 					+ --dataCounter;
 
 			evalStack.push(dataCounter);
 		}
 	}
-	// Last address in evalStack is where result is stored after calculation.
+	// Last address in evalStack is where result is stored after calculation, could have made this the address of variable so room for optimization.
 
 	return evalStack.top();
 
-	/*
-	 While you have not reached the end of the string, read the expression from left to right.
-	 If the current character is a digit,
-	 Push its integer value onto the stack (the integer value of a digit character is its
-	 value in the computer’s character set minus the value of '0' in the
-	 computer’s character set).
-
-	 Otherwise, if the current character is an operator,
-	 Pop the two top elements of the stack into variables x and y.
-	 Calculate y operator x.
-	 Push the result of the calculation onto the stack.
-	 2) When you reach the end of the string, pop the top value of the stack. This is the result
-	 of the postfix expression.
-	 */
-
 }
 
+/**
+ * Check if a string is a variable value.
+ * @param str - String to compare.
+ * @return true if alphabetic character, otherwise false.
+ */
 bool SimpletronCompiler::isStringVar(string str) {
-	/*
-	 return str.size() == 1 && str.at(0) >= 'A'
-	 && str.at(0) <= 'Z';
-	 */
-	if (str.size() == 1 && str.at(0) >= 'a' && str.at(0) <= 'z') {
-		cout << str << " is an alphabetical character." << endl;
-		return true;
-	} else {
-		cout << str << " is not an alphabetical character." << endl;
-		return false;
-	}
+
+	return str.size() == 1 && str.at(0) >= 'a' && str.at(0) <= 'z';
 }
 
+/**
+ * Checks if an element of a specific type exists in the symbol table.
+ * @param symbol - Value of symbol.
+ * @param type - type of symbol (L, V or C) i.e Line Number, Variable or Constant.
+ * @return true if entry for symbol found, otherwise false.
+ */
 bool SimpletronCompiler::isElementInSymbolTable(int symbol, char type) {
 
 	bool symbolFound = false;
 
-	//TODO: ITERATE THROUGH EACH ENTRY IN TABLE TO FIND IF SYMBOL ROW EXISTS.
 	for (int i = 0; i < symbolTable.size(); i++) {
 		if (symbolTable[i].getSymbol() == symbol
-				&& symbolTable[i].getType() == type) //TODO: Complete statement
-						{
+				&& symbolTable[i].getType() == type) {
 			symbolFound = true;
 			break;
 		}
@@ -151,15 +136,13 @@ bool SimpletronCompiler::isElementInSymbolTable(int symbol, char type) {
 
 }
 
+/*
+ * Returns row containing symbol and type
+ * @param symbol - Value of symbol.
+ * @param type - type of symbol (L, V or C) i.e Line Number, Variable or Constant.
+ * @return table entry containing the symbol and type.
+ */
 TableEntry SimpletronCompiler::getSymbolTableRow(int symbol, char type) {
-	/*
-	 * If type = 'V' make char
-	 * if type = 'C' make int
-	 */
-
-	if (type == 'V') {
-		// Convert symbol to char and search for that.
-	}
 
 	// Search for variable, if found return.
 	for (unsigned int i = 0; i < symbolTable.size(); i++) {
@@ -169,10 +152,6 @@ TableEntry SimpletronCompiler::getSymbolTableRow(int symbol, char type) {
 		}
 	}
 
-	cout << endl << "Adding nonexisting variable " << symbol << " of type "
-			<< (char) type << endl;
-	if (type == 'C')
-		cout << "MATCHING TYPE, DREAM COME TRUE";
 	// If variable doesn't exist then add it.
 	TableEntry te(symbol, type, --dataCounter);
 	symbolTable.push_back(te);
@@ -180,6 +159,9 @@ TableEntry SimpletronCompiler::getSymbolTableRow(int symbol, char type) {
 
 }
 
+/**
+ * Initialize flags array and set instance variable values.
+ */
 SimpletronCompiler::SimpletronCompiler() {
 	// Flags for second pass, -1 if no pass needed.
 	for (unsigned int i = 0; i < MEMSIZE; i++)
@@ -189,16 +171,23 @@ SimpletronCompiler::SimpletronCompiler() {
 
 }
 
-void SimpletronCompiler::compileFile(string filename) {
+/**
+ * This method compiles a file specified by filename and outputs it to stream.
+ * @param filename - name of file to find input code from.
+ * @param out - name of stream to output compiled code from.
+ */
+void SimpletronCompiler::compileFile(string filename, ostream& out) {
 
 	ifstream in;
 	in.open(filename.c_str()); //open file to compile
-	if (!in)
+	if (!in) {
 		cout << "infile not found";
+		exit(1);
+	}
 
 	while (getline(in, oneline)) {
 
-		// Parse line to a queue.
+		// Tokenise line into a queue.
 
 		istringstream iss(oneline);
 		deque<string> tokens;

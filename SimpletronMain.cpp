@@ -32,7 +32,7 @@ int main() {
 	ofstream out;
 	out.open("data/outfile.txt");
 	out.close();
-	sc.compileFile("infile.txt");
+	sc.compileFile("infile.txt", cout);
 	/*
 	 Simpletron st;
 

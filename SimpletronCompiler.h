@@ -20,7 +20,7 @@ using namespace std;
 class SimpletronCompiler {
 public:
 	SimpletronCompiler();
-	void compileFile(string filename);
+	void compileFile(string filename, ostream& out);
 private:
 	static bool isStringNumber(string str);
 	static bool isStringVar(string str);
