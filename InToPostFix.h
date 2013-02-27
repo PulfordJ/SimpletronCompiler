@@ -12,8 +12,8 @@
 //============================================================================
 
 #include <iostream>
-#include <stack>
 #include <cctype>
+#include <queue>
 
 using namespace std;
 
@@ -21,4 +21,4 @@ inline int precedence(char sign);
 
 inline bool isOperator(char c);
 
-string infixToPostfix(string infix);
+queue<string> infixToPostfix(string infix);

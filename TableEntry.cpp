@@ -15,7 +15,7 @@ location(location)
 	// TODO Auto-generated constructor stub
 }
 
-char TableEntry::getLocation() const {
+int TableEntry::getLocation() const {
 	return location;
 }
 

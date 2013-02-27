@@ -11,7 +11,7 @@
 class TableEntry {
 public:
 	TableEntry(int symbol, char type, char location);
-	char getLocation() const;
+	int getLocation() const;
 	void setLocation(char location);
 	int getSymbol() const;
 	char getType() const;
@@ -19,7 +19,7 @@ public:
 private:
 	int symbol; // Integer containing ASCII representation of a variable.
 	char type; // 'C' for constant, 'L' for line number, 'V' for variable.
-	char location; // Location in Simpletron memory, 00-99
+	int location; // Location in Simpletron memory, 00-99
 
 };
 
