@@ -12,4 +12,4 @@ Recommendations for cloneing:
 
 Background History:
 -------------------
-* I recently had an interview at ARM in their compiler division. I wanted to brush up on C++ and remembered this excercise from the book so I built it and demonstrated it in the interview. I am currently in a contract for that job as I'm typing this :).
+I recently had an interview at ARM in their compiler division. I wanted to brush up on C++ and remembered this excercise from the book so I built it and demonstrated it in the interview. I am currently in a contract for that job as I'm typing this :).
