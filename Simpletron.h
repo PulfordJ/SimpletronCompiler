@@ -7,12 +7,15 @@
 
 #ifndef SIMPLETRON_H_
 #define SIMPLETRON_H_
+#include <iostream>
+using namespace std;
 
 class Simpletron {
 public:
 	Simpletron();
 	void printState();
-	void inputInstructions();
+	void interactiveInput();
+	void streamInput(istream& in);
 	void execute();
 	void arithResultCheck();
 

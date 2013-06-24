@@ -8,12 +8,16 @@
 #include "Simpletron.h"
 #include <iostream>
 #include <iomanip>
+#include <stdlib.h>
 
 using namespace std;
 
 const char *Simpletron::FATAL_ERROR_MESSAGE =
 		"*** Simpletron execution abnormally terminated ***";
 
+/**
+ * Initialize up Simpletron instance variables.
+ */
 Simpletron::Simpletron() :
 		//Initialize special registers.
 		instructionRegister(0), operationCode(0), operand(0), action(0), accumulator(
@@ -24,23 +28,34 @@ Simpletron::Simpletron() :
 
 }
 
+/**
+ * Error utility function prints error message and state.
+ */
 void Simpletron::printError() {
 	cout << FATAL_ERROR_MESSAGE;
 	printState();
-	instructionCounter = MEMSIZE - 1;
+	instructionCounter = MEMSIZE - 1; // Ensures end of execution.
 }
 
+/**
+ * Prints the state of the Simpletron, i.e it's registers and RAM.
+ */
 void Simpletron::printState() {
 	cout << "REGISTERS:" << endl;
 
 	// List registers.
 	const int REGWIDTH = 20;
-	cout << setw(REGWIDTH) << left << "accumulator" << showpos << setw(5) << setfill('0') << internal << accumulator << endl
-			<< setfill(' ') << setw(REGWIDTH + 3) << left << "instructionCounter" << noshowpos << setw(2) << setfill('0') << internal << instructionCounter << endl
-			<< setfill(' ') << setw(REGWIDTH) << left << "instructionRegister" << showpos << setw(5) << setfill('0') << internal << instructionRegister << endl
-			<< setfill(' ') << setw(REGWIDTH + 3) << left << "operationCode" << noshowpos << setw(2) << setfill('0') << internal << operationCode << endl
-			<< setfill(' ') << setw(REGWIDTH + 3) << left << "operand" << setw(2) << setfill('0') << internal << operand << endl
-			<< endl
+	cout << setw(REGWIDTH) << left << "accumulator" << showpos << setw(5)
+			<< setfill('0') << internal << accumulator << endl << setfill(' ')
+			<< setw(REGWIDTH + 3) << left << "instructionCounter" << noshowpos
+			<< setw(2) << setfill('0') << internal << instructionCounter << endl
+			<< setfill(' ') << setw(REGWIDTH) << left << "instructionRegister"
+			<< showpos << setw(5) << setfill('0') << internal
+			<< instructionRegister << endl << setfill(' ') << setw(REGWIDTH + 3)
+			<< left << "operationCode" << noshowpos << setw(2) << setfill('0')
+			<< internal << operationCode << endl << setfill(' ')
+			<< setw(REGWIDTH + 3) << left << "operand" << setw(2)
+			<< setfill('0') << internal << operand << endl << endl
 			<< setfill(' ') << "MEMORY:" << endl << "  ";
 
 	// print column names for memory dump.
@@ -60,15 +75,21 @@ void Simpletron::printState() {
 	}
 }
 
+/**
+ * This allows checks against overflow errors.
+ */
 void Simpletron::arithResultCheck() {
 	if (accumulator < -9999 || accumulator > +9999) {
-		cout << endl << "*** Attempt to divide by zero ***" << endl;
+		cout << endl << "*** Memory overflow error ***" << endl;
 		printError();
 	}
 
 }
 
-void Simpletron::inputInstructions() {
+/**
+ * This allows SML programming from within a program.
+ */
+void Simpletron::interactiveInput() {
 
 	cout << "*** Welcome to Simpletron! ***" << endl << "*** "
 			<< "Please enter your program one instruction" << " ***" << endl
@@ -102,11 +123,35 @@ void Simpletron::inputInstructions() {
 
 }
 
+/**
+ * This allows SML programming from an input stream, typically a file.
+ * @istream istream to pull instructions from.
+ */
+void Simpletron::streamInput(istream& in) {
+
+	string command;
+	if (!in) {
+		cout << "in stream not found.";
+		exit(1);
+	}
+
+	while (in) {
+		int i = 0;
+		in >> i;
+		in >> memory[i];
+	}
+}
+
+/**
+ * Executes the Simpletron instructions
+ */
 void Simpletron::execute() {
 	cout << "*** Program execution begins ***" << endl;
 
+
 	instructionCounter = 0;
-// Execute typed program.
+
+	// Execute typed program.
 	while (instructionCounter < MEMSIZE) {
 		instructionRegister = memory[instructionCounter];
 		operationCode = instructionRegister / 100;
@@ -115,7 +160,7 @@ void Simpletron::execute() {
 
 		// Essentially the part of the Simpletron that interprets the SML programming language.
 		case READ:
-			cout << "? ";
+			cout << "? "; // Print user for input
 			cin >> memory[operand];
 			cout << endl;
 			break;
@@ -154,6 +199,7 @@ void Simpletron::execute() {
 			arithResultCheck();
 			break;
 
+		// Handle conditional jumps
 		case BRANCH:
 			instructionCounter = operand;
 			--instructionCounter;
@@ -170,6 +216,8 @@ void Simpletron::execute() {
 				--instructionCounter;
 			}
 			break;
+
+		//Handle termination.
 		case HALT:
 			cout << endl << "*** Simpletron execution terminated ***" << endl;
 			printState();

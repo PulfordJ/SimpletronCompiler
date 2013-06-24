@@ -17,6 +17,11 @@
 
 using namespace std;
 
+/**
+ * Find precedence of operator.
+ * @param sign - operator to find precedence of.
+ * @return int - Precedence of operator.
+ */
 inline int precedence(char sign) {
 	if (sign == '*' || sign == '/' || sign == '%')
 		return 5;
@@ -27,10 +32,20 @@ inline int precedence(char sign) {
 
 }
 
+/**
+ * Check if value is operator.
+ * @param c - character to inspect.
+ * @return true if operator, otherwise false.
+ */
 inline bool isOperator(char c) {
 	return c == '*' || c == '/' || c == '%' || c == '+' || c == '-';
 }
 
+/**
+ * Convert infix expression to postfix.
+ * @param infix - infix expression
+ * @return queue - queue of strings for postfix evaluation.
+ */
 queue<string> infixToPostfix(string infix) {
 	queue<string> postfix;
 	unsigned int i;
@@ -41,7 +56,7 @@ queue<string> infixToPostfix(string infix) {
 
 	//create vector of infix tokens from string.
 	istringstream iss(infix);
-	deque<string> tokens;
+	deque<string> tokens; // Because queues don't play well with copy.
 
 	copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<deque<string> >(tokens));
 
@@ -49,29 +64,26 @@ queue<string> infixToPostfix(string infix) {
 		string currStr = tokens.front();
 		tokens.pop_front();
 
-		cout << "Current string is: " << currStr << endl;
-		if (util::isStringNumber(currStr)) {
-			cout << "String " << currStr << "Is a number." << endl;
+		if (util::isStringNumber(currStr)) { // Deal with numbers
 			postfix.push(currStr);
 		}
 		else if (currStr.at(0) == '(')
 			myStack.push('(');
 		else if (isOperator(currStr.at(0))) {
 			while (isOperator(myStack.top())
-					&& precedence(myStack.top()) >= precedence(currStr.at(0))) {
-				//Simpleist way to convert char to string.
+					&& precedence(myStack.top()) >= precedence(currStr.at(0))) { // This handles implicit precedence given by certain operators in an expression.
+				//Simplest way to convert char to string.
 				string s;
 				s += myStack.top();
 				postfix.push(s);
 				myStack.pop();
 			}
-			//TODO: Pop operators (if there are any) at the top o the stack while they have equal or higher precedence than the current operator, then insert the popped operators in postfix.
 			myStack.push(currStr.at(0));
 		} else if (currStr.at(0) == ')') {
 			char stackChar = myStack.top();
 			myStack.pop();
 			while (stackChar != '(') {
-				//Simpleist way to convert char to string.
+				//Simplest way to convert char to string.
 				string s;
 				s += stackChar;
 				postfix.push(s);
@@ -79,32 +91,6 @@ queue<string> infixToPostfix(string infix) {
 				myStack.pop();
 			}
 		}
-
-		//Post fix to infix here.
-		/**
-		 * Push a left parenthesis ( onto the stack
-		 * Append a right parenthesis to the end of infix.
-		 * while stack not empty, read infix from left to right and do following.
-		 * 		If char in infix is digit copy to next element of postfix.
-		 * 		if char is left parenthesis, push onto the stack.
-		 * 		If operator
-		 * 			pop operators (if they are any) if higher precedence than the current operator, and insert the popped operators in postfix.
-		 * 			push the current char in infix onto the stack
-		 * 		If the current character in infix is a right parenthesis
-		 * 			pop operators from the top of the stack and insert them in postfix until a left parenthesis is at the top of the stack.
-		 * 			pop (and discard) the left parenthesis from the stack
-		 *
-		 */
 	}
 	return postfix;
 }
-/*
- int main() {
- string infix = "(6 + 2) * 5 - 8 / 4";
-
- cout << "State of infix: " << infix << endl;
- cout << "State of postfix: " << infixToPostfix(infix);
-
- return 0;
- }
- */

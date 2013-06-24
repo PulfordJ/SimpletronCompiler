@@ -148,6 +148,7 @@ TableEntry SimpletronCompiler::getSymbolTableRow(int symbol, char type) {
 	for (unsigned int i = 0; i < symbolTable.size(); i++) {
 		if (symbolTable[i].getSymbol() == symbol
 				&& symbolTable[i].getType() == type) {
+
 			return symbolTable[i];
 		}
 	}
@@ -155,6 +156,9 @@ TableEntry SimpletronCompiler::getSymbolTableRow(int symbol, char type) {
 	// If variable doesn't exist then add it.
 	TableEntry te(symbol, type, --dataCounter);
 	symbolTable.push_back(te);
+	if (type == 'C') { // First time a constant is found instruction needs to be written to store it in location (NOT IN BOOK)
+		smlInstructs[dataCounter] = symbol;
+	}
 	return te;
 
 }
@@ -164,8 +168,10 @@ TableEntry SimpletronCompiler::getSymbolTableRow(int symbol, char type) {
  */
 SimpletronCompiler::SimpletronCompiler() {
 	// Flags for second pass, -1 if no pass needed.
-	for (unsigned int i = 0; i < MEMSIZE; i++)
+	for (unsigned int i = 0; i < MEMSIZE; i++) {
 		flags[i] = -1;
+		smlInstructs[i] = 0;
+	}
 	dataCounter = MEMSIZE; // Point last variable was added to memory.
 	instructionCounter = -1; // Last statement was added to memory.
 
@@ -190,41 +196,26 @@ void SimpletronCompiler::compileFile(string filename, ostream& out) {
 		// Tokenise line into a queue.
 
 		istringstream iss(oneline);
-		deque<string> tokens;
+		deque<string> tokens; // Using deque because queue doesn't work well with copy.
 
 		copy(istream_iterator<string>(iss), istream_iterator<string>(),
 				back_inserter<deque<string> >(tokens));
-
-		/*
-		 // Debugging function, read all tokens from front.
-		 int p = 0;
-		 while (!tokens.empty())
-		 {
-		 ++p;
-		 cout << "Token number: " << p << "Token: " << tokens.front() << endl;
-		 tokens.pop_front();
-		 }
-		 */
 
 		//Take queue and parse into symbolTable
 		int symbol = atoi(tokens.front().c_str());
 		tokens.pop_front();
 
-		cout << endl << "Adding line number to symbol table" << endl;
 		// Store line number in table if it doesn't exist
 		if (!(this->isElementInSymbolTable(symbol, 'L'))) {
 			TableEntry te(symbol, 'L', instructionCounter + 1);
 			symbolTable.push_back(te);
-			cout << "Symbol: " << te.getSymbol() << " ( "
-					<< char(te.getSymbol()) << " ) " << " Type: "
-					<< te.getType() << " Location: " << (int) te.getLocation()
-					<< endl;
 		}
 
 		string command = tokens.front();
 		tokens.pop_front();
 
 		// React to each command
+
 		if (command == "input") {
 			// Next value is a variable
 			char var = tokens.front().at(0);
@@ -244,25 +235,19 @@ void SimpletronCompiler::compileFile(string filename, ostream& out) {
 			tokens.pop_front(); // Consume '='
 
 			TableEntry varRow = this->getSymbolTableRow(var, 'V');
-			//string infixExp;
+
 			ostringstream infixStream;
-			cout << endl << "Analysing expression: ";
 			while (!tokens.empty()) {
 				string str = tokens.front();
-				cout << str;
 				tokens.pop_front();
-				bool isOp = true;
-				if (util::isStringNumber(str)) {
-					//Process constant.
-					cout << "CONSTANT FOUND";
+				if (util::isStringNumber(str)) { //Process constants.
+
 					// find location of variable, convert to int format and append.
 					infixStream
 							<< ((int) this->getSymbolTableRow(atoi(str.c_str()),
 									'C').getLocation());
 
-				} else if (SimpletronCompiler::isStringVar(str)) {
-					//Process Variable.
-					cout << "VARIABLE FOUND";
+				} else if (SimpletronCompiler::isStringVar(str)) { //Process Variables.
 					infixStream
 							<< ((int) this->getSymbolTableRow(str.at(0), 'V').getLocation());
 				}
@@ -272,28 +257,10 @@ void SimpletronCompiler::compileFile(string filename, ostream& out) {
 					// Store operator.
 					infixStream << str;
 				}
-				/*
-				 cout << "Location for char: " << str.at(0) << " Of type: "
-				 << 'V' << " is "
-				 << (int) this->getSymbolTableRow(str.at(0), 'V').getLocation()
-				 << endl;
-				 */
-				infixStream << " ";
+				infixStream << " "; //TODO Rigid syntax requires space seperators between registers, could be improved with stack.
 			}
 
-			string infixExp;
-			infixExp = infixStream.str();
-			queue<string> postfix = infixToPostfix(infixExp);
-			cout << endl << "Infix is: " << infixExp;
-			/*
-			 cout << endl << "Postfix is: ";
-
-			 //TODO: comment out this test code.
-			 while (!postfix.empty()) {
-			 cout << postfix.front() << " ";
-			 postfix.pop();
-			 }
-			 */
+			queue<string> postfix = infixToPostfix(infixStream.str()); // Generate postfix queue from generated infix-with-addresses expression.
 
 			// Load from result address
 			int result = this->postFixToSML(postfix); // Store for later to preserve instruction order.
@@ -304,8 +271,6 @@ void SimpletronCompiler::compileFile(string filename, ostream& out) {
 			// Store result in variable location.
 			smlInstructs[++instructionCounter] = Simpletron::STORE * 100
 					+ varRow.getLocation();
-
-			cout << endl;
 
 		}
 
@@ -318,19 +283,6 @@ void SimpletronCompiler::compileFile(string filename, ostream& out) {
 
 		else if (command == "print") {
 			// Convert to write command and use symbol table to find location of variable.
-			cout << endl << "PRINT STATEMENT HAS BEGUN" << endl;
-			/*
-			 int z = 0;
-			 while(!tokens.empty()){
-			 cout << "Number: " << z << " str value: " << tokens.front().c_str() << " atoi value: " << atoi(tokens.front().c_str());
-			 if (tokens.front().size() == 1)
-			 cout << " char value: " << tokens.front().at(0);
-			 cout << endl;
-			 }
-			 */
-
-			cout << "Variable being checked in print statement is: "
-					<< atoi(tokens.front().c_str()) << endl;
 			smlInstructs[++instructionCounter] =
 					Simpletron::WRITE * 100
 							+ this->getSymbolTableRow(tokens.front().at(0), 'V').getLocation();
@@ -343,9 +295,6 @@ void SimpletronCompiler::compileFile(string filename, ostream& out) {
 			tokens.pop_front();
 
 			TableEntry varTe = this->getSymbolTableRow(var, 'V');
-			cout << "SUSPECTED FAULT HERE" << endl;
-			cout << "Location for var: " << var << " Of type: " << 'V' << " is "
-					<< (int) varTe.getLocation() << endl;
 
 			// Next value is a comparison
 			string comparison = tokens.front();
@@ -461,46 +410,35 @@ void SimpletronCompiler::compileFile(string filename, ostream& out) {
 	for (int i = 0; i <= instructionCounter; i++) {
 		//If location of instruction unfinished...
 		if (flags[i] != -1) {
-			cout << "Flag value: " << flags[i];
 			//Find Simple line number and use it to find SML line number.
 			for (int j = 0; j < symbolTable.size(); j++) {
-				cout << "Symbol: " << symbolTable[j].getSymbol() << " ( "
-						<< char(symbolTable[j].getSymbol()) << " ) "
-						<< " Type: " << symbolTable[j].getType()
-						<< " Location: " << symbolTable[j].getLocation()
-						<< endl;
-				if (symbolTable[j].getSymbol() == flags[i])
-					cout << endl << "Symbols are a match!" << endl;
-				cout << "Symbol from table: " << symbolTable[j].getSymbol()
-						<< endl;
-				cout << "Matching flag: " << flags[i] << endl;
 				if (symbolTable[j].getSymbol() == flags[i]
 						&& symbolTable[i].getType() == 'L') { // line found
 					smlInstructs[i] += symbolTable[j].getLocation();
-					cout << endl << "Compiled location is : "
-							<< symbolTable[j].getLocation() << endl;
 					break;
 				}
-				cout << "Symbol entry not a match..." << endl;
 			}
 		}
 	}
 
-	// Print compiled instructions out to screen.
-	cout << endl << "Printing out resulting instructions" << endl;
-	for (int i = 0; i <= instructionCounter; i++) {
-		cout << setfill('0') << setw(5) << showpos << internal
-				<< smlInstructs[i] << endl;
+	// Print compiled instructions out to stream
+	for (int i = 0; i < MEMSIZE; i++) {
+		if (smlInstructs[i] != 0)
+			out << setfill('0') << setw(2) << noshowpos << i << setfill('0')
+					<< setw(5) << showpos << internal << smlInstructs[i]
+					<< endl;
 	}
 
-	//TODO: Print end objectTable
-	cout << endl << "Printing out symbol table" << endl;
+	/*
+	 //TODO: Print end objectTable
+	 cout << endl << "Printing out symbol table" << endl;
 
-	for (std::vector<TableEntry>::iterator it = symbolTable.begin();
-			it != symbolTable.end(); ++it) {
-		cout << "Symbol: " << it->getSymbol() << " ( " << char(it->getSymbol())
-				<< " ) " << " Type: " << it->getType() << " Location: "
-				<< it->getLocation() << endl;
-	}
+	 for (std::vector<TableEntry>::iterator it = symbolTable.begin();
+	 it != symbolTable.end(); ++it) {
+	 cout << "Symbol: " << it->getSymbol() << " ( " << char(it->getSymbol())
+	 << " ) " << " Type: " << it->getType() << " Location: "
+	 << it->getLocation() << endl;
+	 }
+	 */
 
 }

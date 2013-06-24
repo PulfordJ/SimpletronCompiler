@@ -30,15 +30,18 @@ int main() {
 
 
 	ofstream out;
-	out.open("data/outfile.txt");
-	out.close();
-	sc.compileFile("infile.txt", cout);
-	/*
-	 Simpletron st;
+	out.open("outfile.txt");
 
-	 st.inputInstructions();
-	 st.execute();
-	 */
+	sc.compileFile("infile.txt", out);
+	out.close();
+
+	ifstream in("outfile.txt");
+
+	Simpletron st;
+
+	st.streamInput(in);
+	st.execute();
+
 	return 0;
 
 }
